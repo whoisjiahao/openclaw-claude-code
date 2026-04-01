@@ -1,0 +1,22 @@
+[project]
+name = "openclaw-claude-code"
+version = "0.1.0"
+description = "OpenClaw Claude Code runtime for asynchronous Claude Code jobs."
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openclaw_claude_code"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
