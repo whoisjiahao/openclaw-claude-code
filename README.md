@@ -105,8 +105,6 @@ See the examples below for representative user-facing messages.
 
 ## Examples
 
-The exact runtime/user-facing templates are defined in [references/ux-feedback.md](./references/ux-feedback.md). The examples below are English renderings for documentation.
-
 ### Onboarding completion
 
 ```text
