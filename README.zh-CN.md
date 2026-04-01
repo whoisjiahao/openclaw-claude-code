@@ -54,7 +54,11 @@ uv sync
 openclaw gateway restart
 ```
 
-如果你的环境支持通过 OpenClaw 自身安装 skill，也可以在后续接入安装流程后通过聊天触发安装。
+如果你的 OpenClaw 支持通过聊天安装 skill，可以直接发送这句话：
+
+```text
+安装 `whoisjiahao/openclaw-claude-code` 这个 skill。
+```
 
 ## 首次使用与 Onboarding
 
@@ -67,7 +71,7 @@ openclaw gateway restart
 - 用户时区
 - 默认通知渠道和目标
 
-onboarding 中配置的时区会成为后续所有任务时间展示的默认时区，例如：
+用户配置的时区会用于所有任务时间展示，例如：
 
 - `created_at`
 - `started_at`
@@ -76,18 +80,157 @@ onboarding 中配置的时区会成为后续所有任务时间展示的默认时
 - `acknowledged_at`
 - `last_output_at`
 
-下面是一个用户时区为 `Asia/Shanghai` 的任务派发示例：
+配置完成后你会看到：
 
 ```text
-🚀 任务已派发
+🎉 OpenClaw Claude Code 已完成初始化。
 
-任务：auth-refactor
-编号：job_1774251330123_a1b2c3
-目录：my-project/src
-目标：重构认证中间件并补齐单元测试
-开始时间：2026-03-27T18:15:30+08:00
+后续我可以把编程任务异步派发给 Claude Code 执行。任务完成后会自动通知你。
 
-任务会在后台运行，完成后自动回报到当前对话。
+常用操作：
+- 💬 直接告诉我编程任务，我会自动派发执行
+- 📊 "任务进度怎样了" — 查看运行状态
+- 📋 "看下日志" — 查看实时输出
+- 📝 "结果呢" — 获取完成后的详细结果
+- 🚫 "取消任务" — 停止正在运行的任务
+- 📃 "有哪些任务" — 列出所有任务
+```
+
+## 示例
+
+### 通过 OpenClaw 聊天安装
+
+```text
+安装 `whoisjiahao/openclaw-claude-code` 这个 skill。
+```
+
+### 任务派发
+
+```text
+🚀 **任务已派发**
+
+📋 任务：auth-refactor  
+🔖 编号：`job_1774251330123_a1b2c3`  
+📂 目录：`my-project/src`  
+🎯 目标：重构认证中间件并补齐单元测试  
+⏰ 开始时间：2026-03-27T18:15:30+08:00
+
+任务在后台运行中，完成后会自动播报到当前对话。  
+如需查看进度，随时告诉我。
+```
+
+### 开启 Agent Teams 和交付物时的任务派发
+
+```text
+🚀 **任务已派发**
+
+📋 任务：generate-report
+🔖 编号：`job_1774253000456_d4e5f6`
+📂 目录：`analytics-service`
+🎯 目标：生成本月用户增长分析报告
+⏰ 开始时间：2026-03-27T22:30:00+08:00
+
+🤝 Agent Teams：已开启
+👥 协作模式：auto
+
+📦 交付物：已要求，完成后会列出文件路径
+
+任务在后台运行中，完成后会自动播报到当前对话。
+如需查看进度，随时告诉我。
+```
+
+### 查看状态
+
+```text
+⚙️ 任务 `auth-refactor` 正在运行中。
+
+已运行 3 分 42 秒，最近一次输出在 15 秒前。
+
+需要我帮你看一下最新的日志吗？
+```
+
+### 查看日志
+
+```text
+🔄 任务仍在运行中，最近动态：
+
+- 🔧 Read → src/service.py  
+- 💬 正在分析服务层的依赖关系…  
+- 🔧 Bash → pytest tests/ -v  
+- 💬 测试全部通过，开始编写报告
+```
+
+### 任务完成
+
+```text
+✅ **任务完成**
+
+📋 任务：auth-refactor
+🔖 编号：`job_1774251330123_a1b2c3`
+
+已完成认证中间件重构：将 `AuthMiddleware` 拆分为 `TokenValidator` 和 `SessionManager` 两个独立组件，新增 12 个单元测试，覆盖率从 43% 提升到 91%。
+
+⏱ 耗时 2 分 34 秒 · 25 轮交互
+💰 $1.39 · 177,138 tokens
+```
+
+### 带交付物的完成
+
+```text
+✅ **任务完成**
+
+📋 任务：generate-report
+🔖 编号：`job_1774253000456_d4e5f6`
+
+已生成用户增长分析报告，包含注册趋势、留存率和渠道分布三个维度的数据。
+
+📦 交付物：
+- `analytics-service/output/growth-report.md`
+- `analytics-service/output/charts.json`
+
+⏱ 耗时 4 分 12 秒 · 38 轮交互
+💰 $2.15 · 245,302 tokens
+```
+
+### 任务失败
+
+```text
+❌ **任务失败**
+
+📋 任务：auth-refactor
+🔖 编号：`job_1774251330123_a1b2c3`
+
+重构过程中发现循环依赖无法自动解决：`AuthService` → `UserService` → `AuthService`。建议先手动解耦这两个模块的依赖关系。
+
+⏱ 耗时 1 分 8 秒 · 12 轮交互
+💰 $0.52 · 68,421 tokens
+```
+
+### 权限被拒绝
+
+```text
+⚠️ 执行过程中有 2 次权限被拒绝，可能影响任务完整性：
+- 🔒 `Bash`: `rm -rf node_modules && npm install`
+- 🔒 `Write`: `src/config/production.json`
+```
+
+### 任务取消
+
+```text
+🚫 **任务已取消**
+
+📋 任务：auth-refactor
+🔖 编号：`job_1774251330123_a1b2c3`
+
+如果需要了解取消前的执行情况，我可以帮你查看日志。
+```
+
+### 并发上限
+
+```text
+⚠️ 当前正在运行的任务已达到上限（2 个），暂时无法接收新任务。
+
+你可以等待当前任务完成，或取消某个任务后再提交。
 ```
 
 ## 运行时目录
