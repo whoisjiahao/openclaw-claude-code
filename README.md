@@ -6,15 +6,19 @@ OpenClaw Claude Code is an OpenClaw skill that dispatches coding tasks to local 
 
 Instead of keeping a long coding session in the chat, OpenClaw can hand the work off to Claude Code, let it run in the background, and push the final result back to the user when the job is done.
 
+Claude Code work happens asynchronously, so the current agent conversation is not blocked by long-running coding sessions, and the conversation does not need to absorb the full execution trace step by step. Most of the heavy execution cost is paid inside local Claude Code rather than inside OpenClaw itself, so OpenClaw usually only sees the lightweight dispatch and result-delivery turns instead of a large token increase from the full coding workflow.
+
 ## What It Does
 
 - Dispatches coding tasks from chat to local Claude Code
+- Runs Claude Code asynchronously without blocking the current OpenClaw agent conversation
 - Runs jobs in `headless` or `tmux` mode
 - Persists job state, logs, results, and artifacts on disk
 - Supports cancellation, status checks, log inspection, and acknowledgements
 - Uses a Claude stop hook as a reconciliation fallback
 - Stores user onboarding preferences, including timezone
 - Displays task timestamps in the configured user timezone
+- Keeps the heavy coding loop inside local Claude Code, so OpenClaw usually incurs only minimal additional tokens for dispatch and result delivery
 
 ## Architecture
 
