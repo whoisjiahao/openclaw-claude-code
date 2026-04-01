@@ -9,7 +9,9 @@ import textwrap
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -56,6 +58,8 @@ def configure(runtime_root: Path, env: dict[str, str], *, lines: int = 120, max_
         str(lines),
         "--max-concurrent-jobs",
         str(max_jobs),
+        "--timezone",
+        "Asia/Shanghai",
         env=env,
     )
     assert completed.returncode == 0
@@ -231,6 +235,7 @@ def test_config_round_trip(tmp_path: Path, fake_env: dict[str, str]) -> None:
         "default_log_tail_lines": 4,
         "max_concurrent_jobs": 2,
         "default_cwd": str(Path.home()),
+        "timezone": payload["timezone"],
         "default_notify_channel": None,
         "default_notify_target": None,
         "default_permission_mode": "bypassPermissions",
@@ -242,6 +247,51 @@ def test_config_round_trip(tmp_path: Path, fake_env: dict[str, str]) -> None:
     assert payload["onboarding_required"] is False
     assert payload["default_log_tail_lines"] == 42
     assert payload["max_concurrent_jobs"] == 3
+    assert payload["timezone"] == "Asia/Shanghai"
+
+
+def test_config_set_rejects_invalid_timezone(tmp_path: Path, fake_env: dict[str, str]) -> None:
+    runtime_root = tmp_path / "runtime"
+    completed, payload = run_cli(
+        runtime_root,
+        "config",
+        "set",
+        "--default-agent-teams-enabled",
+        "false",
+        "--default-log-tail-lines",
+        "4",
+        "--max-concurrent-jobs",
+        "2",
+        "--timezone",
+        "Mars/Olympus",
+        env=fake_env,
+    )
+    assert completed.returncode == 1
+    assert payload["error_code"] == "invalid_config"
+
+
+def test_submit_uses_configured_timezone(tmp_path: Path, fake_env: dict[str, str]) -> None:
+    runtime_root = tmp_path / "runtime"
+    configure(runtime_root, fake_env)
+
+    completed, payload = run_cli(
+        runtime_root,
+        "submit",
+        "--prompt",
+        "timezone test",
+        "--cwd",
+        str(tmp_path),
+        env=fake_env,
+    )
+    assert completed.returncode == 0
+    job_id = str(payload["job_id"])
+    job = read_job(runtime_root, job_id)
+    assert job["timezone"] == "Asia/Shanghai"
+    assert str(payload["created_at"]).endswith("+08:00")
+    assert str(payload["started_at"]).endswith("+08:00")
+    assert datetime.fromisoformat(str(payload["created_at"])).utcoffset() == ZoneInfo("Asia/Shanghai").utcoffset(
+        datetime(2026, 3, 27)
+    )
 
 
 def test_headless_lifecycle_with_finalize_and_acknowledge(tmp_path: Path, fake_env: dict[str, str]) -> None:
@@ -340,6 +390,7 @@ def test_hook_finalize_missing_exit_code_marks_failed(tmp_path: Path, fake_env: 
         "task_name": job_id,
         "prompt": "do work",
         "cwd": str(tmp_path),
+        "timezone": "Asia/Shanghai",
         "status": "running",
         "agent_teams_enabled": False,
         "teammate_mode": None,
@@ -394,6 +445,7 @@ def test_hook_finalize_waits_for_runner_exit_code(tmp_path: Path, fake_env: dict
             "task_name": job_id,
             "prompt": "do work",
             "cwd": str(tmp_path),
+            "timezone": "Asia/Shanghai",
             "status": "running",
             "agent_teams_enabled": False,
             "teammate_mode": None,
@@ -831,6 +883,8 @@ def configure_with_notify(
         "120",
         "--max-concurrent-jobs",
         "2",
+        "--timezone",
+        "Asia/Shanghai",
         "--default-notify-channel",
         channel,
         "--default-notify-target",

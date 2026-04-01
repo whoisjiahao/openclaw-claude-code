@@ -8,12 +8,12 @@ import tempfile
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Mapping
 
 from openclaw_claude_code.errors import BridgeError
 from openclaw_claude_code.models import Config, JobRecord
+from openclaw_claude_code.timeutils import current_time_iso, timestamp_to_iso
 
 try:
     import fcntl
@@ -214,19 +214,19 @@ def exclusive_lock(path: Path) -> Iterator[None]:
             fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
-def utc_now() -> str:
-    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+def now_in_timezone(timezone_name: str) -> str:
+    return current_time_iso(timezone_name)
 
 
 def utc_now_ms() -> int:
     return time.time_ns() // 1_000_000
 
 
-def iso_from_timestamp(timestamp: float) -> str:
-    return datetime.fromtimestamp(timestamp, tz=UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+def iso_from_timestamp(timestamp: float, timezone_name: str) -> str:
+    return timestamp_to_iso(timestamp, timezone_name)
 
 
-def last_output_at(job_paths: JobPaths) -> str | None:
+def last_output_at(job_paths: JobPaths, timezone_name: str) -> str | None:
     candidates: list[float] = []
     for path in (job_paths.stdout_path, job_paths.stderr_path):
         try:
@@ -235,7 +235,7 @@ def last_output_at(job_paths: JobPaths) -> str | None:
             continue
     if not candidates:
         return None
-    return iso_from_timestamp(max(candidates))
+    return iso_from_timestamp(max(candidates), timezone_name)
 
 
 def tail_lines(path: Path, lines: int) -> str:

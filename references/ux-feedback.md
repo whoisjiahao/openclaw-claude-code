@@ -18,6 +18,7 @@ Ask for the following preferences:
 - whether Agent Teams should be enabled by default
 - default number of log lines to read
 - maximum concurrent jobs
+- user timezone (default to the local IANA timezone, e.g. `Asia/Shanghai`)
 - **where to send task completion notifications** (default: this chat)
 
 Suggested welcome reply after onboarding succeeds:
@@ -61,7 +62,9 @@ Build the summary from the `submit` response. Use this template:
 > 任务在后台运行中，完成后会自动通知你。
 > {/if}
 
-Note: `notify_target` is typically a numeric ID (e.g. `-5189558203`). Do NOT show the raw ID to the user. Resolve it to the chat or group name that you are aware of. For example, display "Telegram · 我的工作群" instead of "telegram（-5189558203）". If you cannot resolve the name, use a generic description like "当前对话".
+All timestamps must already be expressed in the configured user timezone. Do NOT convert them back to UTC in the reply.
+
+Note: `notify_target` is typically a numeric ID (e.g. `-1001234567890`). Do NOT show the raw ID to the user. Resolve it to the chat or group name that you are aware of. For example, display "Telegram · 我的工作群" instead of "telegram（-1001234567890）". If you cannot resolve the name, use a generic description like "当前对话".
 > 如需查看进度，随时告诉我。
 
 Fields to include from `submit` response:

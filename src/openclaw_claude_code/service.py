@@ -33,6 +33,7 @@ from openclaw_claude_code.runner import (
     summarize_failure,
     summarize_success,
 )
+from openclaw_claude_code.timeutils import validate_timezone_name
 from openclaw_claude_code.runtime import (
     JobPaths,
     RuntimeSettings,
@@ -50,7 +51,7 @@ from openclaw_claude_code.runtime import (
     read_exit_code,
     require_absolute_cwd,
     scan_artifacts,
-    utc_now,
+    now_in_timezone,
     utc_now_ms,
     write_config,
     write_job,
@@ -163,6 +164,7 @@ def set_config(
     default_log_tail_lines: int,
     max_concurrent_jobs: int,
     default_cwd: str | None = None,
+    timezone: str | None = None,
     default_notify_channel: str | None = None,
     default_notify_target: str | None = None,
     default_permission_mode: str | None = None,
@@ -171,7 +173,9 @@ def set_config(
 
     if default_log_tail_lines < 1 or max_concurrent_jobs < 1:
         raise BridgeError("invalid_config", "日志行数和最大并发数都必须大于等于 1。")
+    existing = load_config(settings.paths)
     effective_pm = default_permission_mode or DEFAULT_PERMISSION_MODE
+    effective_timezone = validate_timezone_name(timezone or existing.timezone)
     if effective_pm not in PERMISSION_MODES:
         raise BridgeError("invalid_config", f"无效的 permission mode：{effective_pm}。")
     if default_cwd:
@@ -179,13 +183,13 @@ def set_config(
 
         if not Path(default_cwd).is_absolute():
             raise BridgeError("invalid_config", "`default-cwd` 必须是绝对路径。")
-    existing = load_config(settings.paths)
     config = Config(
         onboarding_completed=True,
         default_agent_teams_enabled=parse_bool_text(default_agent_teams_enabled),
         default_log_tail_lines=default_log_tail_lines,
         max_concurrent_jobs=max_concurrent_jobs,
         default_cwd=default_cwd or None,
+        timezone=effective_timezone,
         default_notify_channel=default_notify_channel or None,
         default_notify_target=default_notify_target or None,
         default_permission_mode=effective_pm,
@@ -242,13 +246,14 @@ def submit(
             )
 
         job_id = f"job_{utc_now_ms()}_{secrets.token_hex(3)}"
-        created_at = utc_now()
+        created_at = now_in_timezone(config.timezone)
         effective_task_name = task_name or job_id
         job = JobRecord(
             job_id=job_id,
             task_name=effective_task_name,
             prompt=prompt,
             cwd=cwd,
+            timezone=config.timezone,
             status="accepted",
             agent_teams_enabled=agent_teams_enabled,
             teammate_mode=teammate_mode,
@@ -285,7 +290,7 @@ def submit(
         except BridgeError as exc:
             with exclusive_lock(job_paths.state_lock_path):
                 current_job = load_job(job_paths)
-                completed_at = utc_now()
+                completed_at = now_in_timezone(current_job.timezone)
                 failed_job = transition_job(
                     current_job,
                     to_status="failed",
@@ -308,7 +313,7 @@ def submit(
                 )
             raise
 
-        started_at = utc_now()
+        started_at = now_in_timezone(config.timezone)
         with exclusive_lock(job_paths.state_lock_path):
             current_job = load_job(job_paths)
             running_job = transition_job(
@@ -344,7 +349,7 @@ def status(settings: RuntimeSettings, *, job_id: str) -> dict[str, Any]:
         "status": job.status,
         "started_at": job.started_at,
         "updated_at": job.updated_at,
-        "last_output_at": last_output_at(job_paths),
+        "last_output_at": last_output_at(job_paths, job.timezone),
     }
 
 
@@ -395,7 +400,7 @@ def cancel(settings: RuntimeSettings, *, job_id: str) -> dict[str, Any]:
         else:
             raise BridgeError("cancel_handle_missing", "当前任务缺少可取消的运行句柄。")
 
-        completed_at = utc_now()
+        completed_at = now_in_timezone(job.timezone)
         cancelled_job = transition_job(
             job,
             to_status="cancelled",
@@ -429,7 +434,7 @@ def acknowledge(settings: RuntimeSettings, *, job_id: str) -> dict[str, Any]:
         job = load_job(job_paths)
         if job.status not in TERMINAL_STATUSES:
             raise BridgeError("invalid_state_transition", f"当前状态 `{job.status}` 不允许 acknowledge。")
-        acknowledged_at = utc_now()
+        acknowledged_at = now_in_timezone(job.timezone)
         acknowledged_job = transition_job(
             job,
             to_status="acknowledged",
@@ -455,8 +460,8 @@ def _notify_target_flags(channel: str, target: str) -> list[str]:
     """Pick the right ``openclaw agent`` target flag based on format.
 
     Always uses ``--channel`` so the agent runs within the target
-    session context (affects session routing).  For the target: numeric
-    values (chat IDs like ``-5189558203``, phone numbers like
+    session context (affects session routing). For the target: numeric
+    values (chat IDs like ``-1001234567890``, phone numbers like
     ``+15555550123``) use ``--to`` which accepts IDs; human-readable
     targets (``@user``, ``#channel``) use ``--reply-to``.
     """
@@ -608,7 +613,7 @@ def finalize_job(settings: RuntimeSettings, *, job_id: str, by: str) -> dict[str
             }
 
         exit_code = read_exit_code(job_paths)
-        completed_at = utc_now()
+        completed_at = now_in_timezone(job.timezone)
         if exit_code is None:
             outcome: Status = "failed"
             message = "任务收尾失败：runner 未写入 exit-code.txt。"
@@ -657,7 +662,7 @@ def reconcile_job(settings: RuntimeSettings, *, job_id: str, by: str) -> dict[st
 
             exit_code = read_exit_code(job_paths)
             if exit_code is not None:
-                completed_at = utc_now()
+                completed_at = now_in_timezone(job.timezone)
                 if exit_code == 0:
                     outcome: Status = "completed"
                     message = summarize_success(job_paths)
@@ -676,7 +681,7 @@ def reconcile_job(settings: RuntimeSettings, *, job_id: str, by: str) -> dict[st
                 break
 
             if not process_exists(job.process_pid):
-                completed_at = utc_now()
+                completed_at = now_in_timezone(job.timezone)
                 finalized_job, result_record = _persist_terminal_result(
                     job_paths,
                     job,
@@ -689,7 +694,7 @@ def reconcile_job(settings: RuntimeSettings, *, job_id: str, by: str) -> dict[st
                 break
 
             if time.monotonic() >= deadline:
-                completed_at = utc_now()
+                completed_at = now_in_timezone(job.timezone)
                 finalized_job, result_record = _persist_terminal_result(
                     job_paths,
                     job,

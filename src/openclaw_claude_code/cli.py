@@ -48,6 +48,7 @@ def build_parser() -> argparse.ArgumentParser:
     config_set_parser.add_argument("--default-log-tail-lines", type=int, required=True)
     config_set_parser.add_argument("--max-concurrent-jobs", type=int, required=True)
     config_set_parser.add_argument("--default-cwd", default=None)
+    config_set_parser.add_argument("--timezone", default=None)
     config_set_parser.add_argument("--default-notify-channel", default=None)
     config_set_parser.add_argument("--default-notify-target", default=None)
     config_set_parser.add_argument("--default-permission-mode", default=None)
@@ -143,6 +144,7 @@ def dispatch(args: argparse.Namespace, settings: Any) -> dict[str, Any] | None:
                 default_log_tail_lines=args.default_log_tail_lines,
                 max_concurrent_jobs=args.max_concurrent_jobs,
                 default_cwd=args.default_cwd,
+                timezone=args.timezone,
                 default_notify_channel=args.default_notify_channel,
                 default_notify_target=args.default_notify_target,
                 default_permission_mode=args.default_permission_mode,

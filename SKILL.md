@@ -96,6 +96,7 @@ If `onboarding_required` is `true`, gather the following preferences from the us
 - `default_log_tail_lines`
 - `max_concurrent_jobs`
 - **Default workspace (`default_cwd`)**: Ask the user for a default working directory. This is the root directory where their code projects live (e.g. `~/workspace` or `~/projects`). It serves as the search scope when locating a specific project — scan subdirectories within this directory first before asking the user. Note: `--cwd` is always required when submitting; `default_cwd` is a search anchor, not a fallback.
+- **Timezone (`timezone`)**: Default to the user's local IANA timezone (for example `Asia/Shanghai`) during onboarding. All later time displays should use this configured timezone.
 - **Task completion notifications**: Ask where notifications should be sent. The default is the current chat channel. Collect the channel name (e.g. `telegram`, `discord`) and target ID. If the user accepts the default, use the channel and target of the current conversation.
 
 Then persist them:
@@ -106,12 +107,13 @@ uv run python scripts/bridge.py config set \
   --default-log-tail-lines 4 \
   --max-concurrent-jobs 2 \
   --default-cwd /Users/username/workspace \
+  --timezone Asia/Shanghai \
   --default-notify-channel telegram \
-  --default-notify-target -5189558203 \
+  --default-notify-target <chat-id> \
   --default-permission-mode bypassPermissions
 ```
 
-The `--default-cwd`, `--default-notify-channel`, `--default-notify-target`, and `--default-permission-mode` flags are optional during `config set`. `--cwd` is always required when submitting a job — `default_cwd` serves only as a search scope for project inference. Notifications are disabled if channel/target are omitted. Permission mode defaults to `bypassPermissions` (required for headless `-p` mode).
+The `--default-cwd`, `--timezone`, `--default-notify-channel`, `--default-notify-target`, and `--default-permission-mode` flags are optional during `config set`. If `--timezone` is omitted, the skill defaults to the local system timezone detected during onboarding. `--cwd` is always required when submitting a job — `default_cwd` serves only as a search scope for project inference. Notifications are disabled if channel/target are omitted. Permission mode defaults to `bypassPermissions` (required for headless `-p` mode).
 
 If `config set` succeeds during onboarding, reply using the **"Onboarding"** welcome template from `ux-feedback.md`, then proceed to handle the original request.
 

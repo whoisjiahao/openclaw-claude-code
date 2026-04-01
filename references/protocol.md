@@ -123,8 +123,9 @@ Resolution order:
   "default_log_tail_lines": 4,
   "max_concurrent_jobs": 2,
   "default_cwd": "/Users/username",
+  "timezone": "Asia/Shanghai",
   "default_notify_channel": "telegram",
-  "default_notify_target": "-5189558203",
+  "default_notify_target": "<chat-id>",
   "default_permission_mode": "bypassPermissions"
 }
 ```
@@ -137,6 +138,7 @@ Resolution order:
   "task_name": "job_1774251330123_a1b2c3",
   "prompt": "重构认证中间件并补齐测试",
   "cwd": "/abs/path",
+  "timezone": "Asia/Shanghai",
   "status": "running",
   "agent_teams_enabled": false,
   "teammate_mode": null,
@@ -145,13 +147,13 @@ Resolution order:
   "process_pid": 43210,
   "tmux_socket_path": null,
   "tmux_session_name": null,
-  "created_at": "2026-03-23T10:15:30Z",
-  "started_at": "2026-03-23T10:15:32Z",
+  "created_at": "2026-03-23T18:15:30+08:00",
+  "started_at": "2026-03-23T18:15:32+08:00",
   "completed_at": null,
   "acknowledged_at": null,
-  "updated_at": "2026-03-23T10:15:32Z",
+  "updated_at": "2026-03-23T18:15:32+08:00",
   "notify_channel": "telegram",
-  "notify_target": "-5189558203"
+  "notify_target": "<chat-id>"
 }
 ```
 
@@ -166,7 +168,7 @@ Notes:
 Each line is a JSON object:
 
 ```json
-{"ts":"2026-03-23T10:15:30Z","status":"accepted","by":"submit"}
+{"ts":"2026-03-23T18:15:30+08:00","status":"accepted","by":"submit"}
 ```
 
 `by` is one of:
@@ -186,7 +188,7 @@ Each line is a JSON object:
   "outcome": "completed",
   "message": "已完成认证中间件重构并补齐测试。",
   "exit_code": 0,
-  "completed_at": "2026-03-23T10:20:01Z",
+  "completed_at": "2026-03-23T18:20:01+08:00",
   "artifacts": ["/abs/path/to/artifacts/report.md"],
   "cost_usd": 1.39,
   "duration_seconds": 154,

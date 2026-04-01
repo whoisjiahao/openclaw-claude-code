@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Literal, cast
 
 from openclaw_claude_code.errors import BridgeError
+from openclaw_claude_code.timeutils import detect_local_timezone_name, validate_timezone_name
 
 Status = Literal["accepted", "running", "completed", "failed", "cancelled", "acknowledged"]
 TerminalStatus = Literal["completed", "failed", "cancelled"]
@@ -31,6 +32,7 @@ class Config:
     default_log_tail_lines: int = 4
     max_concurrent_jobs: int = 2
     default_cwd: str = ""
+    timezone: str = field(default_factory=detect_local_timezone_name)
     default_notify_channel: str | None = None
     default_notify_target: str | None = None
     default_permission_mode: str = DEFAULT_PERMISSION_MODE
@@ -42,7 +44,7 @@ class Config:
     @classmethod
     def from_dict(cls, payload: dict[str, Any] | None) -> "Config":
         if payload is None:
-            return cls(default_cwd=cls._default_cwd())
+            return cls(default_cwd=cls._default_cwd(), timezone=detect_local_timezone_name())
         try:
             onboarding_completed = _require_bool(payload, "onboarding_completed")
             default_agent_teams_enabled = _require_bool(payload, "default_agent_teams_enabled")
@@ -56,6 +58,7 @@ class Config:
             default_log_tail_lines=default_log_tail_lines,
             max_concurrent_jobs=max_concurrent_jobs,
             default_cwd=payload.get("default_cwd") or cls._default_cwd(),
+            timezone=validate_timezone_name(payload.get("timezone") or detect_local_timezone_name()),
             default_notify_channel=payload.get("default_notify_channel"),
             default_notify_target=payload.get("default_notify_target"),
             default_permission_mode=payload.get("default_permission_mode", DEFAULT_PERMISSION_MODE),
@@ -71,6 +74,7 @@ class JobRecord:
     task_name: str
     prompt: str
     cwd: str
+    timezone: str
     status: Status
     agent_teams_enabled: bool
     teammate_mode: str | None
@@ -95,6 +99,7 @@ class JobRecord:
             task_name=_require_str(payload, "task_name"),
             prompt=_require_str(payload, "prompt"),
             cwd=_require_str(payload, "cwd"),
+            timezone=validate_timezone_name(payload.get("timezone") or detect_local_timezone_name()),
             status=status,
             agent_teams_enabled=_require_bool(payload, "agent_teams_enabled"),
             teammate_mode=_optional_str(payload, "teammate_mode"),
@@ -181,4 +186,3 @@ def _require_status(payload: dict[str, Any], field: str) -> Status:
     if value not in STATUSES:
         raise BridgeError("internal_error", f"字段 `{field}` 不是合法状态。")
     return cast(Status, value)
-
