@@ -57,7 +57,7 @@ openclaw gateway restart
 If your OpenClaw installation supports skill installation from chat, send:
 
 ```text
-Install the `openclaw-claude-code` skill from `whoisjiahao/openclaw-claude-code`.
+Install the skill from `https://github.com/whoisjiahao/openclaw-claude-code`.
 ```
 
 ## First Run and Onboarding
@@ -70,15 +70,6 @@ On first activation, the skill asks for:
 - default workspace root used for project discovery
 - user timezone
 - default notification channel and target
-
-The configured user timezone is used for all task timestamps such as:
-
-- `created_at`
-- `started_at`
-- `updated_at`
-- `completed_at`
-- `acknowledged_at`
-- `last_output_at`
 
 After onboarding succeeds, the user will see:
 
@@ -101,7 +92,7 @@ Common actions:
 ### Install through OpenClaw chat
 
 ```text
-Install the `openclaw-claude-code` skill from `whoisjiahao/openclaw-claude-code`.
+Install the skill from `https://github.com/whoisjiahao/openclaw-claude-code`.
 ```
 
 ### Dispatch summary

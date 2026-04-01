@@ -57,7 +57,7 @@ openclaw gateway restart
 如果你的 OpenClaw 支持通过聊天安装 skill，可以直接发送这句话：
 
 ```text
-安装 `whoisjiahao/openclaw-claude-code` 这个 skill。
+安装这个 skill：`https://github.com/whoisjiahao/openclaw-claude-code`
 ```
 
 ## 首次使用与 Onboarding
@@ -70,15 +70,6 @@ openclaw gateway restart
 - 默认工作区根目录，用于项目发现
 - 用户时区
 - 默认通知渠道和目标
-
-用户配置的时区会用于所有任务时间展示，例如：
-
-- `created_at`
-- `started_at`
-- `updated_at`
-- `completed_at`
-- `acknowledged_at`
-- `last_output_at`
 
 配置完成后你会看到：
 
@@ -101,7 +92,7 @@ openclaw gateway restart
 ### 通过 OpenClaw 聊天安装
 
 ```text
-安装 `whoisjiahao/openclaw-claude-code` 这个 skill。
+安装这个 skill：`https://github.com/whoisjiahao/openclaw-claude-code`
 ```
 
 ### 任务派发
