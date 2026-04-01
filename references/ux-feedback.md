@@ -11,6 +11,18 @@ Use `status` and `logs` only when the user explicitly asks about progress.
 
 Task completion notifications are pushed automatically by the runtime via `openclaw agent --deliver`. When the notification arrives, OpenClaw should immediately fetch the full result via `result` command, format it, and present it to the user — the user should receive one complete message, not a brief alert followed by a separate result.
 
+## Language
+
+The template examples in this file are written in Chinese, but user-facing messages must follow the user's communication language.
+
+Rules:
+
+- If the user is communicating in Chinese, use the Chinese wording shown here.
+- If the user is communicating in another language, translate the template content into that language.
+- Preserve the template structure, field order, conditional blocks, emphasis, and emoji anchors when translating.
+- Keep code, paths, command names, `job_id`, `task_name`, and other literal identifiers unchanged unless translation would clearly improve readability without changing meaning.
+- Do not mix languages unnecessarily in the same reply. Use the user's language consistently, except for code-like literals and proper nouns.
+
 ## Onboarding
 
 Ask for the following preferences:
