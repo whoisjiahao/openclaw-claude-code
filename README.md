@@ -18,13 +18,16 @@ Instead of keeping a long coding session in the chat, OpenClaw can hand the work
 
 ## Architecture
 
-```text
-User chat (Telegram / WhatsApp / Discord / Slack / ...)
-    -> OpenClaw Gateway
-    -> OpenClaw Claude Code skill
-    -> Claude Code running locally
-    -> OpenClaw Gateway notification delivery
-    -> User chat
+```mermaid
+flowchart LR
+    U[User Chat<br/>Telegram / WhatsApp / Discord / Slack] --> G[OpenClaw Gateway]
+    G --> S[OpenClaw Claude Code Skill]
+    S --> C[Claude Code]
+    S --> R[Runtime State<br/>config.json / job.json / logs / result.json]
+    C --> R
+    S --> N[Notification Dispatch<br/>openclaw agent --deliver]
+    N --> G
+    G --> U
 ```
 
 Core flow:
@@ -34,6 +37,31 @@ Core flow:
 3. The skill starts Claude Code in the background.
 4. Runtime state is written under the OpenClaw data directory.
 5. When the job finishes, OpenClaw fetches the full result and delivers a formatted reply.
+
+### Communication Sequence
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant G as OpenClaw Gateway
+    participant S as Claude Code Skill
+    participant C as Claude Code
+    participant R as Runtime Files
+
+    U->>G: Send coding request
+    G->>S: Trigger skill
+    S->>R: Load config / inspect onboarding
+    S->>R: Create job.json + events.jsonl
+    S->>C: Start async job
+    C->>R: Stream stdout / stderr
+    C->>R: Write exit-code.txt
+    S->>R: Finalize result.json
+    S->>G: Deliver notification via openclaw agent --deliver
+    G->>S: Fetch result by job_id
+    S->>R: Read result.json
+    S-->>G: Return formatted result payload
+    G-->>U: Deliver final reply
+```
 
 ## Requirements
 
@@ -48,7 +76,7 @@ Core flow:
 Clone the repository into the managed OpenClaw skills directory:
 
 ```bash
-git clone git@github.com:<owner>/openclaw-claude-code.git ~/.openclaw/skills/openclaw-claude-code
+git clone https://github.com/whoisjiahao/openclaw-claude-code.git ~/.openclaw/skills/openclaw-claude-code
 cd ~/.openclaw/skills/openclaw-claude-code
 uv sync
 openclaw gateway restart
@@ -71,7 +99,15 @@ On first activation, the skill asks for:
 - user timezone
 - default notification channel and target
 
-After onboarding succeeds, the user will see:
+Notification delivery is best-effort. If the `openclaw` CLI is unavailable or no notification target is configured, jobs still complete normally but no automatic delivery is attempted.
+
+See the examples below for representative user-facing messages.
+
+## Examples
+
+The exact runtime/user-facing templates are defined in [references/ux-feedback.md](./references/ux-feedback.md). The examples below are English renderings for documentation.
+
+### Onboarding completion
 
 ```text
 🎉 OpenClaw Claude Code is ready.
@@ -85,14 +121,6 @@ Common actions:
 - 📝 "What is the result?" — fetch the final outcome
 - 🚫 "Cancel the task" — stop a running job
 - 📃 "List the tasks" — show all jobs
-```
-
-## Examples
-
-### Install through OpenClaw chat
-
-```text
-Install the skill from `https://github.com/whoisjiahao/openclaw-claude-code`.
 ```
 
 ### Dispatch summary
