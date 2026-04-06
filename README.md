@@ -349,3 +349,7 @@ Optional syntax check:
 ```bash
 python -m compileall src tests
 ```
+
+## License
+
+MIT. See [LICENSE](./LICENSE).

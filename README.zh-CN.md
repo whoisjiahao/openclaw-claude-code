@@ -347,3 +347,7 @@ uv sync
 ```bash
 python -m compileall src tests
 ```
+
+## 许可
+
+MIT。见 [LICENSE](./LICENSE)。
