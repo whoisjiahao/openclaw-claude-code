@@ -1,7 +1,7 @@
 ---
 name: openclaw-claude-code
 version: 0.1.0
-description: "Activate when a request should be delegated to Claude Code for asynchronous work on a local repository: coding tasks (write/modify/refactor/debug/test/review), repository-level investigation or analysis (e.g., tracing scheduling logic and producing a report), any instruction that asks Claude Code/agent to go into a specific project path and execute work, or management of previously submitted async coding jobs."
+description: "Activate when a request should be delegated to Claude Code for asynchronous work on a local repository: coding tasks (write/modify/refactor/debug/test/review), repository-level investigation or analysis (e.g., tracing scheduling logic and producing a report), any instruction that asks Claude Code/agent to go into a specific project path and execute work, management of previously submitted async coding jobs, or whenever the user explicitly mentions the skill name \"openclaw-claude-code\"."
 metadata:
   {
     "openclaw": { "emoji": "💻", "requires": { "anyBins": ["claude", "uv"] } },
@@ -90,6 +90,12 @@ Run:
 uv run python scripts/bridge.py config inspect
 ```
 
+Onboarding is a hard gate.
+
+- If `onboarding_required` is `true`, do NOT ask for task details, project paths, `cwd`, prompts, artifacts, or any other job-submission inputs until onboarding has been completed successfully.
+- If the user invoked the skill without an actual task, start onboarding immediately and stop after onboarding succeeds.
+- If the user already included a task in the same message, complete onboarding first. Only after onboarding succeeds may you continue handling that original task.
+
 If `onboarding_required` is `true`, gather the following preferences from the user:
 
 - `default_agent_teams_enabled`
@@ -115,7 +121,9 @@ uv run python scripts/bridge.py config set \
 
 The `--default-cwd`, `--timezone`, `--default-notify-channel`, `--default-notify-target`, and `--default-permission-mode` flags are optional during `config set`. If `--timezone` is omitted, the skill defaults to the local system timezone detected during onboarding. `--cwd` is always required when submitting a job — `default_cwd` serves only as a search scope for project inference. Notifications are disabled if channel/target are omitted. Permission mode defaults to `bypassPermissions` (required for headless `-p` mode).
 
-If `config set` succeeds during onboarding, reply using the **"Onboarding"** welcome template from `ux-feedback.md`, then proceed to handle the original request.
+When onboarding is required and user input is still missing, ask only for the onboarding preferences using the **"Onboarding required"** template from `ux-feedback.md`.
+
+If `config set` succeeds during onboarding, reply using the **"Onboarding"** welcome template from `ux-feedback.md`. If the original user message also contained a concrete task, then proceed to handle that original request. Otherwise stop after the onboarding welcome reply.
 
 ### 2. Submitting a new job
 

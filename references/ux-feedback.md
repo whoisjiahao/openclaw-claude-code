@@ -33,6 +33,24 @@ Ask for the following preferences:
 - user timezone (default to the local IANA timezone, e.g. `Asia/Shanghai`)
 - **where to send task completion notifications** (default: this chat)
 
+Suggested prompt when onboarding is required and preferences have not been collected yet:
+
+> 🧭 在使用 OpenClaw Claude Code 之前，我需要先完成一次初始化。
+>
+> 请告诉我这些默认设置：
+> - 是否默认开启 Agent Teams
+> - 默认查看多少行日志
+> - 最大并发任务数
+> - 默认工作区目录
+> - 时区（默认可用 `Asia/Shanghai`）
+> - 任务完成后通知发送到哪里（默认：当前对话）
+
+Rules:
+
+- Do not ask for task details in this message.
+- Do not ask for `cwd` confirmation, prompt text, or other job parameters before onboarding completes.
+- If the user only sent a skill activation command, this onboarding prompt should be the entire reply.
+
 Suggested welcome reply after onboarding succeeds:
 
 > 🎉 OpenClaw Claude Code 已完成初始化。
