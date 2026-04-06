@@ -2,6 +2,7 @@
 name = "openclaw-claude-code"
 version = "0.1.0"
 description = "OpenClaw Claude Code runtime for asynchronous Claude Code jobs."
+license = { file = "LICENSE" }
 requires-python = ">=3.11"
 dependencies = []
 
